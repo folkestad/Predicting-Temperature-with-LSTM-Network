@@ -6,6 +6,8 @@ Links:
     [MNIST Dataset](http://yann.lecun.com/exdb/mnist/).
 Author: Aymeric Damien
 Project: https://github.com/aymericdamien/TensorFlow-Examples/
+
+https://github.com/aymericdamien/TensorFlow-Examples/blob/master/examples/3_NeuralNetworks/recurrent_network.py
 """
 
 from __future__ import print_function
