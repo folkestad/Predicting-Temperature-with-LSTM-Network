@@ -17,7 +17,7 @@ from matplotlib import pyplot
 
 import numpy
 
-from data_handler import get_data
+from data_handler import get_data, invert_scale, inverse_difference
  
 # fit an LSTM network to training data
 def fit_lstm(train, batch_size, nb_epoch, neurons):
@@ -41,7 +41,9 @@ def forecast_lstm(model, batch_size, X):
 
 #######################################################################################
 
-scaler, train_scaled, test_scaled = get_data('monthly-temperature-in-england.csv')
+# get data sets from data handler
+n_years = 10
+scaler, raw_values, train_scaled, test_scaled = get_data('monthly-temperature-in-england.csv', predict_n_years=n_years)
  
 # fit the model
 lstm_model = fit_lstm(train_scaled, 1, 10, 2)
@@ -62,13 +64,13 @@ for i in range(len(test_scaled)):
     yhat = inverse_difference(raw_values, yhat, len(test_scaled)+1-i)
 	# store forecast
     predictions.append(yhat)
-    expected = raw_values[len(train) + i + 1]
+    expected = raw_values[len(train_scaled) + i + 1]
     print('Month=%d, Predicted=%f, Expected=%f' % (i+1, yhat, expected))
  
 # report performance
-rmse = sqrt(mean_squared_error(raw_values[-12:], predictions))
+rmse = sqrt(mean_squared_error(raw_values[-n_years*12:], predictions))
 print('Test RMSE: %.3f' % rmse)
 # line plot of observed vs predicted
-pyplot.plot(raw_values[-12:])
+pyplot.plot(raw_values[-n_years*12:])
 pyplot.plot(predictions)
 pyplot.show()

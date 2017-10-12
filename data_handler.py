@@ -6,6 +6,8 @@ from pandas import datetime
 
 from sklearn.preprocessing import MinMaxScaler
 
+import numpy
+
 from os import path, sys
 
 # date-time parsing function for loading the dataset
@@ -20,15 +22,12 @@ def timeseries_to_supervised(data, lag=1):
     df = concat(columns, axis=1)
     df.fillna(0, inplace=True)
     df.columns = ['value', 'target']
-    print(df)
     return df
 
 # create a differenced series
 def difference(dataset, interval=1):
     diff = list()
     for i in range(interval, len(dataset)):
-        # print(type(dataset[i]), dataset[i])
-        # sys.exit(0)
         value = dataset[i] - dataset[i - interval]
         diff.append(value)
     return Series(diff)
@@ -58,7 +57,7 @@ def invert_scale(scaler, X, value):
     inverted = scaler.inverse_transform(array)
     return inverted[0, -1]
 
-def get_data(file_name='monthly-temperature-in-england.csv'):
+def get_data(file_name='monthly-temperature-in-england.csv', predict_n_years=10):
     # load dataset
     series = read_csv(
         filepath_or_buffer='Data/'+file_name, 
@@ -69,7 +68,7 @@ def get_data(file_name='monthly-temperature-in-england.csv'):
         squeeze=True, 
         date_parser=date_parser,
         skip_blank_lines=True,
-        skiprows=[2978]
+        skiprows=[2979-1]
     )
 
     # transform data to be stationary
@@ -81,9 +80,9 @@ def get_data(file_name='monthly-temperature-in-england.csv'):
     supervised_values = supervised.values
 
     # split data into train and test-sets
-    train, test = supervised_values[0:-12], supervised_values[-12:]
+    train, test = supervised_values[0:-predict_n_years*12], supervised_values[-predict_n_years*12:]
 
     # transform the scale of the data
     scaler, train_scaled, test_scaled = scale(train, test)
 
-    return scaler, train_scaled, test_scaled
+    return scaler, raw_values, train_scaled, test_scaled
