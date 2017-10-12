@@ -57,7 +57,7 @@ def invert_scale(scaler, X, value):
     inverted = scaler.inverse_transform(array)
     return inverted[0, -1]
 
-def get_data(file_name='monthly-temperature-in-england.csv', predict_n_years=10):
+def get_data(file_name='monthly-temperature-in-england.csv', predict_n_months=10):
     # load dataset
     series = read_csv(
         filepath_or_buffer='Data/'+file_name, 
@@ -80,7 +80,7 @@ def get_data(file_name='monthly-temperature-in-england.csv', predict_n_years=10)
     supervised_values = supervised.values
 
     # split data into train and test-sets
-    train, test = supervised_values[0:-predict_n_years*12], supervised_values[-predict_n_years*12:]
+    train, test = supervised_values[0:-predict_n_months], supervised_values[-predict_n_months:]
 
     # transform the scale of the data
     scaler, train_scaled, test_scaled = scale(train, test)

@@ -41,12 +41,15 @@ def forecast_lstm(model, batch_size, X):
 
 #######################################################################################
 
-# get data sets from data handler
+# Set how many years we want to predict and convert the years to months
 n_years = 10
-scaler, raw_values, train_scaled, test_scaled = get_data('monthly-temperature-in-england.csv', predict_n_years=n_years)
+n_months = n_years*12
+
+# get data sets from data handler
+scaler, raw_values, train_scaled, test_scaled = get_data('monthly-temperature-in-england.csv', predict_n_months=n_months)
  
 # fit the model
-lstm_model = fit_lstm(train_scaled, 1, 10, 2)
+lstm_model = fit_lstm(train_scaled, 1, 20, 2)
 # forecast the entire training dataset to build up state for forecasting
 train_reshaped = train_scaled[:, 0].reshape(len(train_scaled), 1, 1)
 lstm_model.predict(train_reshaped, batch_size=1)
@@ -57,7 +60,6 @@ for i in range(len(test_scaled)):
     # make one-step forecast
     X, y = test_scaled[i, 0:-1], test_scaled[i, -1]
     yhat = forecast_lstm(lstm_model, 1, X)
-    # yhat = y
 	# invert scaling
     yhat = invert_scale(scaler, X, yhat)
 	# invert differencing
@@ -68,9 +70,9 @@ for i in range(len(test_scaled)):
     print('Month=%d, Predicted=%f, Expected=%f' % (i+1, yhat, expected))
  
 # report performance
-rmse = sqrt(mean_squared_error(raw_values[-n_years*12:], predictions))
+rmse = sqrt(mean_squared_error(raw_values[-n_months:], predictions))
 print('Test RMSE: %.3f' % rmse)
 # line plot of observed vs predicted
-pyplot.plot(raw_values[-n_years*12:])
+pyplot.plot(raw_values[-n_months:])
 pyplot.plot(predictions)
 pyplot.show()
