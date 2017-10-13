@@ -10,6 +10,24 @@ import numpy
 
 from os import path, sys
 
+# change data format in file
+def change_date_format(src_file='Data/monthly_mean_global_surface_tempreratures_1880-2017.csv',                                          
+        dest_file='Data/monthly_mean_global_surface_tempreratures_1880-2017_new.csv'):
+    data = open(src_file, 'r')
+    data_new = open(dest_file, 'w')
+    counter = -1
+    for i, line in enumerate(data):
+        if i < 2:
+            data_new.write(line)
+            continue
+        counter += 1
+        line_new = line.split(',')
+        line_new[0] = line_new[0].split('.')[0]+'-'
+        line_new[0] = line_new[0]+'0{}'.format(counter%12+1) if counter%12+1 <= 9 else line_new[0]+'{}'.format(counter%12+1)
+        data_new.write(','.join(line_new))
+    data.close()
+    data_new.close()
+
 # date-time parsing function for loading the dataset
 def date_parser(x):
     return datetime.strptime(x, '%Y-%m')
@@ -57,22 +75,26 @@ def invert_scale(scaler, X, value):
     inverted = scaler.inverse_transform(array)
     return inverted[0, -1]
 
-def get_data(file_name='monthly-temperature-in-england.csv', predict_n_months=10):
+def get_data(file_name='Data/monthly_mean_global_surface_tempreratures_1880-2017_new.csv', predict_n_months=12):
     # load dataset
+
+    # g = (i for i in irange(2000))
     series = read_csv(
-        filepath_or_buffer='Data/'+file_name, 
+        filepath_or_buffer=file_name, 
         sep=',', 
         header=0, 
         parse_dates=[0], 
-        index_col=0, 
+        index_col=0,
+        usecols=[0,2], 
         squeeze=True, 
         date_parser=date_parser,
         skip_blank_lines=True,
-        skiprows=[2979-1]
+        skiprows=[1-1]
     )
-
+    
     # transform data to be stationary
-    raw_values = [ float(x.replace('?', '')) for x in series.values ]
+    # raw_values = [ float(x.replace('?', '')) for x in series.values ]
+    raw_values = series.values
     diff_values = difference(raw_values, 1)
 
     # transform data to be supervised learning

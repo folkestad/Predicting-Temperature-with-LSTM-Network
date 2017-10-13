@@ -42,11 +42,15 @@ def forecast_lstm(model, batch_size, X):
 #######################################################################################
 
 # Set how many years we want to predict and convert the years to months
-n_years = 10
-n_months = n_years*12
+n_years = 1
+n_months = 8
+n_months_total = n_years*12 + n_months
 
 # get data sets from data handler
-scaler, raw_values, train_scaled, test_scaled = get_data('monthly-temperature-in-england.csv', predict_n_months=n_months)
+scaler, raw_values, train_scaled, test_scaled = get_data(
+    file_name='Data/monthly_mean_global_surface_tempreratures_1880-2017_new.csv', 
+    predict_n_months=n_months_total
+)
  
 # fit the model
 lstm_model = fit_lstm(train_scaled, 1, 20, 2)
@@ -70,9 +74,9 @@ for i in range(len(test_scaled)):
     print('Month=%d, Predicted=%f, Expected=%f' % (i+1, yhat, expected))
  
 # report performance
-rmse = sqrt(mean_squared_error(raw_values[-n_months:], predictions))
+rmse = sqrt(mean_squared_error(raw_values[-n_months_total:], predictions))
 print('Test RMSE: %.3f' % rmse)
 # line plot of observed vs predicted
-pyplot.plot(raw_values[-n_months:])
+pyplot.plot(raw_values[-n_months_total:])
 pyplot.plot(predictions)
 pyplot.show()
