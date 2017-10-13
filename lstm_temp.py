@@ -42,7 +42,7 @@ def forecast_lstm(model, batch_size, X):
 #######################################################################################
 
 # Set how many years we want to predict and convert the years to months
-n_years = 1
+n_years = 10
 n_months = 8
 n_months_total = n_years*12 + n_months
 
@@ -53,7 +53,7 @@ scaler, raw_values, train_scaled, test_scaled = get_data(
 )
  
 # fit the model
-lstm_model = fit_lstm(train_scaled, 1, 20, 2)
+lstm_model = fit_lstm(train_scaled, 1, 0, 2)
 # forecast the entire training dataset to build up state for forecasting
 train_reshaped = train_scaled[:, 0].reshape(len(train_scaled), 1, 1)
 lstm_model.predict(train_reshaped, batch_size=1)
@@ -71,12 +71,18 @@ for i in range(len(test_scaled)):
 	# store forecast
     predictions.append(yhat)
     expected = raw_values[len(train_scaled) + i + 1]
-    print('Month=%d, Predicted=%f, Expected=%f' % (i+1, yhat, expected))
+    print('Month=%d, Predicted=%f, Expected=%f, difference=%f' % (i+1, yhat, expected, yhat-expected))
  
 # report performance
 rmse = sqrt(mean_squared_error(raw_values[-n_months_total:], predictions))
 print('Test RMSE: %.3f' % rmse)
+
 # line plot of observed vs predicted
-pyplot.plot(raw_values[-n_months_total:])
-pyplot.plot(predictions)
+# pyplot.plot(raw_values[-n_months_total:])
+# pyplot.plot(predictions)
+
+pyplot.plot(raw_values[1500:])
+predictions = numpy.asarray(predictions)
+pyplot.plot(numpy.hstack((raw_values[1500:-n_months_total],predictions)))
+
 pyplot.show()
