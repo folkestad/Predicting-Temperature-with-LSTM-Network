@@ -56,13 +56,14 @@ scaler, raw_values, train_scaled, test_scaled = get_data(
     predict_n_months=n_months_total
 )
 
-results = []
 n_rounds = 10
-epochs = 5
+epochs = 1
+neurons = 2
+results = []
 for n in range(n_rounds):
-    print("Round {}".format(n))
+    print("Round {} (epochs -> {} and neurons -> {})".format(n+1, epochs, neurons))
     # fit the model
-    lstm_model = fit_lstm(train=train_scaled, batch_size=1, nb_epoch=epochs, neurons=1)
+    lstm_model = fit_lstm(train=train_scaled, batch_size=1, nb_epoch=epochs, neurons=neurons)
 
     # forecast the entire training dataset to build up state for forecasting
     train_reshaped = train_scaled[:, 0].reshape(len(train_scaled), 1, 1)
