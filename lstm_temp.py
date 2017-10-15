@@ -58,45 +58,45 @@ scaler, raw_values, train_scaled, test_scaled = get_data(
 
 results = []
 n_rounds = 10
-epochs_per_round = 1
+epochs = 5
 for n in range(n_rounds):
-    for epoch in range(epochs_per_round):
-        # fit the model
-        lstm_model = fit_lstm(train=train_scaled, batch_size=1, nb_epoch=epoch, neurons=1)
+    print("Round {}".format(n))
+    # fit the model
+    lstm_model = fit_lstm(train=train_scaled, batch_size=1, nb_epoch=epochs, neurons=1)
 
-        # forecast the entire training dataset to build up state for forecasting
-        train_reshaped = train_scaled[:, 0].reshape(len(train_scaled), 1, 1)
-        lstm_model.predict(train_reshaped, batch_size=1)
-        
-        # walk-forward validation on the test data
-        predictions = list()
-        for i in range(len(test_scaled)):
-            # make one-step forecast
-            X, y = test_scaled[i, 0:-1], test_scaled[i, -1]
-            yhat = forecast_lstm(lstm_model, 1, X)
-            # invert scaling
-            yhat = invert_scale(scaler, X, yhat)
-            # invert differencing
-            yhat = inverse_difference(raw_values, yhat, len(test_scaled) - i)
-            # store forecast
-            predictions.append(yhat)
-            expected = raw_values[len(train_scaled) + i + 1] 
-            print('Month=%d, Predicted=%f, Expected=%f, difference=%f' % (i + 1, yhat, expected, yhat-expected))
-        
-        # report performance
-        rmse = sqrt(mean_squared_error(raw_values[-n_months_total:], predictions))
-        print('Test RMSE: %.3f' % rmse)
-        results.append(rmse)
+    # forecast the entire training dataset to build up state for forecasting
+    train_reshaped = train_scaled[:, 0].reshape(len(train_scaled), 1, 1)
+    lstm_model.predict(train_reshaped, batch_size=1)
+    
+    # walk-forward validation on the test data
+    predictions = list()
+    for i in range(len(test_scaled)):
+        # make one-step forecast
+        X, y = test_scaled[i, 0:-1], test_scaled[i, -1]
+        yhat = forecast_lstm(lstm_model, 1, X)
+        # invert scaling
+        yhat = invert_scale(scaler, X, yhat)
+        # invert differencing
+        yhat = inverse_difference(raw_values, yhat, len(test_scaled) - i)
+        # store forecast
+        predictions.append(yhat)
+        expected = raw_values[len(train_scaled) + i + 1] 
+        print('Month=%d, Predicted=%f, Expected=%f, difference=%f' % (i + 1, yhat, expected, yhat-expected))
+    
+    # report performance
+    rmse = sqrt(mean_squared_error(raw_values[-n_months_total:], predictions))
+    print('Test RMSE: %.3f' % rmse)
+    results.append(rmse)
 
-        if True==False:
-            # line plot of observed vs predicted
-            true_values = raw_values[-n_months_total:]
-            pyplot.plot(true_values)
-            pyplot.plot(predictions)
-            pyplot.show()
+    if True==False:
+        # line plot of observed vs predicted
+        true_values = raw_values[-n_months_total:]
+        pyplot.plot(true_values)
+        pyplot.plot(predictions)
+        pyplot.show()
 
 print(results)
-print("Avg RMSE with {} epochs: {}".format(epochs_per_round, sum(results)/n_rounds))
+print("Avg RMSE with {} epochs: {}".format(epochs, sum(results)/n_rounds))
 
 # if True==False:
 #     real_values = raw_values[-200:]
