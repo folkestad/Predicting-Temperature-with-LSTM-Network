@@ -93,13 +93,13 @@ def get_data(file_name='Data/monthly_mean_global_surface_tempreratures_1880-2017
     )
     
     # transform data to be stationary
-    # raw_values = [ float(x.replace('?', '')) for x in series.values ]
     raw_values = series.values
     diff_values = difference(raw_values, 1)
 
     # transform data to be supervised learning
     supervised = timeseries_to_supervised(diff_values, 1)
     supervised_values = supervised.values
+    print(supervised.head())
 
     # split data into train and test-sets
     train, test = supervised_values[0:-predict_n_months], supervised_values[-predict_n_months:]
