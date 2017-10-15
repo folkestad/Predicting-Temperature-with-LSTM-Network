@@ -20,15 +20,21 @@ import numpy
 from data_handler import get_data, invert_scale, inverse_difference
  
 # fit an LSTM network to training data
-def fit_lstm(train, batch_size, nb_epoch, neurons):
+def fit_lstm(train, batch_size, nb_epoch, neurons, hidden_layers):
     X, y = train[:, 0:-1], train[:, -1]
     X = X.reshape(X.shape[0], 1, X.shape[1])
     model = Sequential()
     model.add(LSTM(
         neurons, 
-        batch_input_shape=(batch_size, X.shape[1], X.shape[2]), 
-        stateful=True # Means that the LSTM remember from the last batch
+        batch_input_shape=(batch_size, X.shape[1], X.shape[2]),
+        return_sequences=True,
+        stateful=True # Means that the LSTM remember from the last batch,
     ))
+    for i in range(1,hidden_layers):
+        model.add(LSTM(
+            neurons,
+            stateful=True # Means that the LSTM remember from the last batch
+        ))
     model.add(Dense(1))
     model.compile(loss='mean_squared_error', optimizer='adam')
     for i in range(nb_epoch):
@@ -59,11 +65,18 @@ scaler, raw_values, train_scaled, test_scaled = get_data(
 n_rounds = 10
 epochs = 1
 neurons = 2
+hidden_layers = 2
 results = []
 for n in range(n_rounds):
-    print("Round {} (epochs -> {} and neurons -> {})".format(n+1, epochs, neurons))
+    print("Round {} (epochs -> {}, neurons -> {} and hidden layers -> {})".format(n+1, epochs, neurons, hidden_layers))
     # fit the model
-    lstm_model = fit_lstm(train=train_scaled, batch_size=1, nb_epoch=epochs, neurons=neurons)
+    lstm_model = fit_lstm(
+        train=train_scaled, 
+        batch_size=1, 
+        nb_epoch=epochs, 
+        neurons=neurons,
+        hidden_layers=hidden_layers
+    )
 
     # forecast the entire training dataset to build up state for forecasting
     train_reshaped = train_scaled[:, 0].reshape(len(train_scaled), 1, 1)
