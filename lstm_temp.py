@@ -24,17 +24,31 @@ def fit_lstm(train, batch_size, nb_epoch, neurons, hidden_layers):
     X, y = train[:, 0:-1], train[:, -1]
     X = X.reshape(X.shape[0], 1, X.shape[1])
     model = Sequential()
-    model.add(LSTM(
-        neurons, 
-        batch_input_shape=(batch_size, X.shape[1], X.shape[2]),
-        return_sequences=True,
-        stateful=True # Means that the LSTM remember from the last batch,
-    ))
-    for i in range(1,hidden_layers):
-        model.add(LSTM(
-            neurons,
-            stateful=True # Means that the LSTM remember from the last batch
-        ))
+    for i in range(0, hidden_layers):
+        if i == 0 and hidden_layers <= 1:
+            model.add(LSTM(
+                neurons, 
+                batch_input_shape=(batch_size, X.shape[1], X.shape[2]),
+                stateful=True # Means that the LSTM remember from the last batch,
+            ))
+        elif i == 0 and hidden_layers > 1:
+            model.add(LSTM(
+                neurons, 
+                batch_input_shape=(batch_size, X.shape[1], X.shape[2]),
+                return_sequences=True,
+                stateful=True # Means that the LSTM remember from the last batch,
+            ))
+        elif 1 < i and i < hidden_layers-1:
+            model.add(LSTM(
+                neurons,
+                return_sequences=True,
+                stateful=True # Means that the LSTM remember from the last batch
+            ))
+        else:
+            model.add(LSTM(
+                neurons,
+                stateful=True # Means that the LSTM remember from the last batch
+            ))
     model.add(Dense(1))
     model.compile(loss='mean_squared_error', optimizer='adam')
     for i in range(nb_epoch):
@@ -62,17 +76,18 @@ scaler, raw_values, train_scaled, test_scaled = get_data(
     predict_n_months=n_months_total
 )
 
-n_rounds = 10
+n_rounds = 1
 epochs = 1
-neurons = 2
-hidden_layers = 2
+neurons = 1
+hidden_layers = 1
+batch_size = 1
 results = []
 for n in range(n_rounds):
     print("Round {} (epochs -> {}, neurons -> {} and hidden layers -> {})".format(n+1, epochs, neurons, hidden_layers))
     # fit the model
     lstm_model = fit_lstm(
         train=train_scaled, 
-        batch_size=1, 
+        batch_size=batch_size, 
         nb_epoch=epochs, 
         neurons=neurons,
         hidden_layers=hidden_layers
@@ -80,7 +95,7 @@ for n in range(n_rounds):
 
     # forecast the entire training dataset to build up state for forecasting
     train_reshaped = train_scaled[:, 0].reshape(len(train_scaled), 1, 1)
-    lstm_model.predict(train_reshaped, batch_size=1)
+    lstm_model.predict(train_reshaped, batch_size=batch_size)
     
     # walk-forward validation on the test data
     predictions = list()
