@@ -75,10 +75,8 @@ def invert_scale(scaler, X, value):
     inverted = scaler.inverse_transform(array)
     return inverted[0, -1]
 
-def get_data(file_name='Data/monthly_mean_global_surface_tempreratures_1880-2017_new.csv', predict_n_months=12):
+def get_data(file_name='Data/monthly_mean_global_surface_tempreratures_1880-2017_new.csv', predict_n_months=12, cuttoff_dataset=0):
     # load dataset
-
-    # g = (i for i in irange(2000))
     series = read_csv(
         filepath_or_buffer=file_name, 
         sep=',', 
@@ -93,8 +91,10 @@ def get_data(file_name='Data/monthly_mean_global_surface_tempreratures_1880-2017
     )
     
     # transform data to be stationary
-    raw_values = series.values
+    raw_values = series.values[cuttoff_dataset:]
     diff_values = difference(raw_values, 1)
+
+    print("Size of dataset: {}".format(len(raw_values)))
 
     # transform data to be supervised learning
     supervised = timeseries_to_supervised(diff_values, 1)

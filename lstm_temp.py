@@ -4,7 +4,7 @@ from pandas import concat
 from pandas import read_csv
 from pandas import datetime
 
-from sklearn.metrics import mean_squared_error
+from sklearn.metrics import mean_squared_error, mean_absolute_error
 from sklearn.preprocessing import MinMaxScaler
 
 from keras.models import Sequential
@@ -50,7 +50,7 @@ def fit_lstm(train, batch_size, nb_epoch, neurons, hidden_layers):
                 stateful=True # Means that the LSTM remember from the last batch
             ))
     model.add(Dense(1))
-    model.compile(loss='mean_squared_error', optimizer='adam')
+    model.compile(loss='mean_absolute_error', optimizer='adam')
     for i in range(nb_epoch):
         print(i,"/",nb_epoch)
         model.fit(X, y, epochs=1, batch_size=batch_size, verbose=1, shuffle=False)
@@ -69,19 +69,22 @@ def forecast_lstm(model, batch_size, X):
 n_years = 1
 n_months = 8
 n_months_total = n_years*12 + n_months
+cuttoff_dataset = 1620
 
 # get data sets from data handler
 scaler, raw_values, train_scaled, test_scaled = get_data(
     file_name='Data/monthly_mean_global_surface_tempreratures_1880-2017_new.csv', 
-    predict_n_months=n_months_total
+    predict_n_months=n_months_total,
+    cuttoff_dataset=cuttoff_dataset
 )
 
 n_rounds = 1
-epochs = 1
-neurons = 1
+epochs = 1000
+neurons = 2
 hidden_layers = 1
 batch_size = 1
-results = []
+rmses = []
+maes = []
 for n in range(n_rounds):
     print("Round {} (epochs -> {}, neurons -> {} and hidden layers -> {})".format(n+1, epochs, neurons, hidden_layers))
     # fit the model
@@ -114,18 +117,23 @@ for n in range(n_rounds):
     
     # report performance
     rmse = sqrt(mean_squared_error(raw_values[-n_months_total:], predictions))
+    mae = mean_absolute_error(raw_values[-n_months_total:], predictions)
     print('Test RMSE: %.3f' % rmse)
-    results.append(rmse)
+    print('Test MAE: %.3f' % mae)
+    rmses.append(rmse)
+    maes.append(mae)
 
-    if True==False:
+    if True==True:
         # line plot of observed vs predicted
         true_values = raw_values[-n_months_total:]
         pyplot.plot(true_values)
         pyplot.plot(predictions)
         pyplot.show()
 
-print(results)
-print("Avg RMSE with {} epochs: {}".format(epochs, sum(results)/n_rounds))
+print(rmses)
+print(maes)
+print("Avg RMSE with {} epochs: {}".format(epochs, sum(rmses)/n_rounds))
+print("Avg MAE with  {} epochs: {}".format(epochs, sum(maes)/n_rounds))
 
 # if True==False:
 #     real_values = raw_values[-200:]
