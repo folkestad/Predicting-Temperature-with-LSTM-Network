@@ -62,7 +62,8 @@ def difference(dataset, interval=1):
 # invert differenced value
 
 
-def inverse_difference(history, yhat, interval=1):
+def inverse_difference(history=[], yhat=0, interval=-1):
+    print("inverse:", yhat, history[-interval])
     return yhat + history[-interval]
 
 # scale train and test data to [-1, 1]
@@ -83,12 +84,14 @@ def scale(train, test):
 # inverse scaling for a forecasted value
 
 
-def invert_scale(scaler, X, value):
+def invert_scale(scaler=None, X=None, value=None):
     new_row = [x for x in X] + [value]
     array = numpy.array(new_row)
     array = array.reshape(1, len(array))
     inverted = scaler.inverse_transform(array)
     return inverted[0, -1]
+
+# get data from file
 
 
 def get_data(file_name='Data/annual-water-use-in-new-york-cit.csv', predict_n=12, cuttoff_dataset=0):
