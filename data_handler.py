@@ -35,7 +35,7 @@ def change_date_format(src_file='Data/monthly_mean_global_surface_tempreratures_
 
 
 def date_parser(x):
-    return datetime.strptime(x, '%Y')
+    return datetime.strptime(x, '%Y-%m')
 
 # frame a sequence as a supervised learning problem
 
@@ -62,7 +62,7 @@ def difference(dataset, interval=1):
 # invert differenced value
 
 
-def inverse_difference(history=[], yhat=0, interval=-1):
+def inverse_difference(history=[], yhat=0, interval=1):
     print("inverse:", yhat, history[-interval])
     return yhat + history[-interval]
 
@@ -99,22 +99,24 @@ def get_data(file_name='Data/annual-water-use-in-new-york-cit.csv', predict_n=12
     series = read_csv(
         filepath_or_buffer=file_name,
         sep=',',
-        header=0,
+        header=1,
         parse_dates=[0],
         index_col=0,
-        usecols=[0, 1],
+        usecols=[0, 2],
         squeeze=True,
         date_parser=date_parser,
         skip_blank_lines=True,
-        skiprows=[36]
+        skiprows=[0]
     )
 
     # transform data to be stationary
     raw_values = series.values[
-        :-cuttoff_dataset] if cuttoff_dataset > 0 else series.values
-    print("Data cutoff: size {}".format(len(raw_values)))
+        -cuttoff_dataset:] if cuttoff_dataset > 0 else series.values
+    print(
+        "Data cutoff: size {} --> head: {}".format(len(raw_values), raw_values[:5]))
     diff_values = difference(raw_values, 1)
-    print("Data transformed: size {}".format(len(diff_values)))
+    print("Data transformed: size {} --> head: {}".format(len(diff_values),
+                                                          diff_values[:5]))
 
     # transform data to be supervised learning
     supervised = timeseries_to_supervised(diff_values, 1)

@@ -7,10 +7,6 @@ from pandas import datetime
 from sklearn.metrics import mean_squared_error, mean_absolute_error
 from sklearn.preprocessing import MinMaxScaler
 
-from keras.models import Sequential
-from keras.layers import Dense
-from keras.layers import LSTM
-
 from math import sqrt
 
 from matplotlib import pyplot
@@ -18,81 +14,28 @@ from matplotlib import pyplot
 import numpy
 
 from data_handler import get_data, invert_scale, inverse_difference
-
-# fit an LSTM network to training data
-
-
-def fit(train, batch_size, epochs, neurons, hidden_layers):
-    X, y = train[:, 0:-1], train[:, -1]
-    X = X.reshape(X.shape[0], 1, X.shape[1])
-    model = Sequential()
-
-    for i in range(1, hidden_layers + 1):
-        if i == 1 and hidden_layers <= 1:
-            print(1, i)
-            model.add(LSTM(
-                neurons,
-                batch_input_shape=(batch_size, X.shape[1], X.shape[2]),
-                stateful=True  # Means that the LSTM remember from the last batch,
-            ))
-        elif i == 1 and hidden_layers > 1:
-            print(2, i)
-            model.add(LSTM(
-                neurons,
-                batch_input_shape=(batch_size, X.shape[1], X.shape[2]),
-                return_sequences=True,
-                stateful=True  # Means that the LSTM remember from the last batch,
-            ))
-        elif i > 1 and i < hidden_layers:
-            print(3, i)
-            model.add(LSTM(
-                neurons,
-                return_sequences=True,
-                stateful=True  # Means that the LSTM remember from the last batch
-            ))
-        elif i == hidden_layers:
-            print(4, i)
-            model.add(LSTM(
-                neurons,
-                stateful=True  # Means that the LSTM remember from the last batch
-            ))
-        else:
-            print(5, "Error")
-    model.add(Dense(1))
-    model.compile(loss='mean_squared_error', optimizer='adam')
-
-    for i in range(epochs):
-        print(i, "/", epochs)
-        model.fit(X, y, epochs=1, batch_size=batch_size,
-                  verbose=1, shuffle=False)
-        model.reset_states()
-    return model
-
-# make a one-step forecast
-
-
-def forecast(model=None, batch_size=None, X=None):
-    X = X.reshape(1, 1, len(X))
-    yhat = model.predict(X, batch_size=1)
-    return yhat[0, 0]
+from lstm_model import *
 
 ##########################################################################
 
-# Set how many years we want to predict and convert the years to months
-test_size = 1
-cuttoff_dataset = 0
+# Set how many <time unit>s we want to predict
+test_size = 8
+cuttoff_dataset = 241
 
+# on t=2: 1 100 1 1 gives 0.058, 1 200 2 1 gives 0.053, 1 200 10 1 gives,
+# 0.023, 1 200 20 1 gives 0.024, 1 200 40 1 gives 0.084, 1 50 40 1 gives
+# 0.036, 1 15 40 1 gives 0.026,
 n_rounds = 1
-epochs = 30
-neurons = 1
-hidden_layers = 1
+epochs = 20
+neurons = 100
+hidden_layers = 2
 batch_size = 1
 rmses = []
 maes = []
 
 # get data sets from data handler
 scaler, real_values, train_scaled, test_scaled = get_data(
-    file_name='Data/high-and-low-water-levels-of-the-amazon-at-iquitos-1962-1978.csv',
+    file_name='Data/monthly_mean_global_surface_tempreratures_1880-2017_new.csv',
     predict_n=test_size,
     cuttoff_dataset=cuttoff_dataset
 )
@@ -119,8 +62,8 @@ for n in range(n_rounds):
     predictions = list(real_values[:-test_size])
     expectations = list(real_values)
 
-    # predictions_untransformed = list(train_scaled[:, 0].tolist())
-    # expectations_untransformed = list(train_scaled[:, 0].tolist())
+    predictions_untransformed = list(train_scaled[:, 0].tolist())
+    expectations_untransformed = list(train_scaled[:, 0].tolist())
 
     history = real_values[:-test_size]
 
@@ -133,8 +76,8 @@ for n in range(n_rounds):
         yhat_inverted_scaled = forecast(model=lstm_model, batch_size=1, X=X)
         print(yhat_inverted_scaled)
 
-        # predictions_untransformed.append(yhat_inverted_scaled)
-        # expectations_untransformed.append(y)
+        predictions_untransformed.append(yhat_inverted_scaled)
+        expectations_untransformed.append(y)
 
         # invert scaling
         yhat_inverted = invert_scale(
@@ -147,8 +90,14 @@ for n in range(n_rounds):
         #     history=history, yhat=yhat_inverted, interval=1)
         # print(pred)
 
+        # print(len(test_scaled) - i)
+        # print(real_values)
+        # pred = inverse_difference(
+        # history=real_values, yhat=yhat_inverted, interval=len(test_scaled) -
+        # i)
+
         pred = inverse_difference(
-            history=real_values, yhat=yhat_inverted, interval=len(test_scaled) - i)
+            history=history, yhat=yhat_inverted, interval=1)
 
         # print("yhats:", yhat_inverted_scaled, yhat_inverted, pred)
         # print("\n")
@@ -161,11 +110,15 @@ for n in range(n_rounds):
         # expectations.append(real_values[-len(test_scaled) + i])
         print('Year=%d, Predicted=%f, Expected=%f, difference=%f' %
               (i + 1, predictions[-1], expectations[-1], predictions[-1] - expectations[-1]))
+        print('Year=%d, Predicted=%f, Expected=%f, difference=%f' %
+              (i + 1, predictions_untransformed[-1], expectations_untransformed[-1], predictions_untransformed[-1] - expectations_untransformed[-1]))
         print("\n")
 
     # report performance
-    rmse = sqrt(mean_squared_error(expectations, predictions))
-    mae = mean_absolute_error(expectations, predictions)
+    rmse = sqrt(mean_squared_error(
+        expectations[-test_size:], predictions[-test_size:]))
+    mae = mean_absolute_error(
+        expectations[-test_size:], predictions[-test_size:])
     print('Test RMSE: %.3f' % rmse)
     print('Test MAE: %.3f' % mae)
     rmses.append(rmse)
@@ -183,13 +136,13 @@ for n in range(n_rounds):
 
         # print(history)
         # print(real_values[:len(history)])
-        pyplot.plot(expectations)
-        pyplot.plot(predictions)
-        pyplot.show()
-
-        # pyplot.plot(expectations_untransformed)
-        # pyplot.plot(predictions_untransformed)
+        # pyplot.plot(expectations)
+        # pyplot.plot(predictions)
         # pyplot.show()
+
+        pyplot.plot(expectations_untransformed)
+        pyplot.plot(predictions_untransformed)
+        pyplot.show()
 
         # plot scaled values
         # print(targets_inverted_scaled)
@@ -230,7 +183,7 @@ for n in range(n_rounds):
         # maximum = max(true_values)
         # pyplot.plot((len(preceding) - 1, len(preceding) - 1),
         #             (minimum - 5, maximum + 5), 'r-')
-        pyplot.show()
+        # pyplot.show()
 
 print(rmses)
 print(maes)
