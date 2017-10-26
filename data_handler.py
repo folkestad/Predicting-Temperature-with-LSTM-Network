@@ -10,14 +10,39 @@ import numpy
 
 from os import path, sys
 
+# change data format in file
+
+
+def change_date_format(src_file='Data/monthly_mean_global_surface_tempreratures_1880-2017.csv',
+                       dest_file='Data/monthly_mean_global_surface_tempreratures_1880-2017_new.csv'):
+    data = open(src_file, 'r')
+    data_new = open(dest_file, 'w')
+    counter = -1
+    for i, line in enumerate(data):
+        if i < 2:
+            data_new.write(line)
+            continue
+        counter += 1
+        line_new = line.split(',')
+        line_new[0] = line_new[0].split('.')[0] + '-'
+        line_new[0] = line_new[0] + '0{}'.format(counter % 12 + 1) if counter % 12 + 1 <= 9 else line_new[
+            0] + '{}'.format(counter % 12 + 1)
+        data_new.write(','.join(line_new))
+    data.close()
+    data_new.close()
+
 # date-time parsing function for loading the dataset
+
+
 def date_parser(x):
     return datetime.strptime(x, '%Y-%m')
 
 # frame a sequence as a supervised learning problem
+
+
 def timeseries_to_supervised(data, lag=1):
     df = DataFrame(data)
-    columns = [df.shift(i) for i in range(1, lag+1)]
+    columns = [df.shift(i) for i in range(1, lag + 1)]
     columns.append(df)
     df = concat(columns, axis=1)
     df.fillna(0, inplace=True)
@@ -25,6 +50,8 @@ def timeseries_to_supervised(data, lag=1):
     return df
 
 # create a differenced series
+
+
 def difference(dataset, interval=1):
     diff = list()
     for i in range(interval, len(dataset)):
@@ -33,10 +60,15 @@ def difference(dataset, interval=1):
     return Series(diff)
 
 # invert differenced value
-def inverse_difference(history, yhat, interval=1):
+
+
+def inverse_difference(history=[], yhat=0, interval=1):
+    print("inverse:", yhat, history[-interval])
     return yhat + history[-interval]
 
 # scale train and test data to [-1, 1]
+
+
 def scale(train, test):
     # fit scaler
     scaler = MinMaxScaler(feature_range=(-1, 1))
@@ -50,37 +82,50 @@ def scale(train, test):
     return scaler, train_scaled, test_scaled
 
 # inverse scaling for a forecasted value
-def invert_scale(scaler, X, value):
+
+
+def invert_scale(scaler=None, X=None, value=None):
     new_row = [x for x in X] + [value]
     array = numpy.array(new_row)
     array = array.reshape(1, len(array))
     inverted = scaler.inverse_transform(array)
     return inverted[0, -1]
 
-def get_data(file_name='monthly-temperature-in-england.csv', predict_n_months=10):
+# get data from file
+
+
+def get_data(file_name='Data/annual-water-use-in-new-york-cit.csv', predict_n=12, cuttoff_dataset=0):
     # load dataset
     series = read_csv(
-        filepath_or_buffer='Data/'+file_name, 
-        sep=',', 
-        header=0, 
-        parse_dates=[0], 
-        index_col=0, 
-        squeeze=True, 
+        filepath_or_buffer=file_name,
+        sep=',',
+        header=1,
+        parse_dates=[0],
+        index_col=0,
+        usecols=[0, 2],
+        squeeze=True,
         date_parser=date_parser,
         skip_blank_lines=True,
-        skiprows=[2979-1]
+        skiprows=[0]
     )
 
     # transform data to be stationary
-    raw_values = [ float(x.replace('?', '')) for x in series.values ]
+    raw_values = series.values[
+        -cuttoff_dataset:] if cuttoff_dataset > 0 else series.values
+    print(
+        "Data cutoff: size {} --> head: {}".format(len(raw_values), raw_values[:5]))
     diff_values = difference(raw_values, 1)
+    print("Data transformed: size {} --> head: {}".format(len(diff_values),
+                                                          diff_values[:5]))
 
     # transform data to be supervised learning
     supervised = timeseries_to_supervised(diff_values, 1)
     supervised_values = supervised.values
+    print(supervised.head())
 
     # split data into train and test-sets
-    train, test = supervised_values[0:-predict_n_months], supervised_values[-predict_n_months:]
+    train, test = supervised_values[
+        0:-predict_n], supervised_values[-predict_n:]
 
     # transform the scale of the data
     scaler, train_scaled, test_scaled = scale(train, test)
