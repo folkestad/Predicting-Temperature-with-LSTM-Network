@@ -111,8 +111,6 @@ def get_data(file_name='Data/monthly_mean_global_surface_tempreratures_1880-2017
         skiprows=[0]
     )
 
-    print(series.head())
-
     # transform data to be stationary
     raw_values = series.values[
         -cuttoff_dataset:] if cuttoff_dataset > 0 else series.values
