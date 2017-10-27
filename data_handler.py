@@ -10,6 +10,8 @@ import numpy
 
 from os import path, sys
 
+from matplotlib import pyplot
+
 # change data format in file
 
 
@@ -99,7 +101,7 @@ def get_data(file_name='Data/annual-water-use-in-new-york-cit.csv', predict_n=12
     series = read_csv(
         filepath_or_buffer=file_name,
         sep=',',
-        header=1,
+        header=0,
         parse_dates=[0],
         index_col=0,
         usecols=[0, 2],
@@ -109,9 +111,12 @@ def get_data(file_name='Data/annual-water-use-in-new-york-cit.csv', predict_n=12
         skiprows=[0]
     )
 
+    print(series.head())
+
     # transform data to be stationary
     raw_values = series.values[
         -cuttoff_dataset:] if cuttoff_dataset > 0 else series.values
+
     print(
         "Data cutoff: size {} --> head: {}".format(len(raw_values), raw_values[:5]))
     diff_values = difference(raw_values, 1)
