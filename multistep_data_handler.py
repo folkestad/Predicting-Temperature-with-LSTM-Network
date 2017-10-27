@@ -96,11 +96,16 @@ def make_forecasts(model, n_batch, train, test, n_lag, n_seq):
 
 
 def evaluate_forecasts(test, forecasts, n_lag, n_seq):
+    avg_results = []
     for i in range(n_seq):
         actual = [row[i] for row in test]
         predicted = [forecast[i] for forecast in forecasts]
         rmse = sqrt(mean_squared_error(actual, predicted))
         print('t+%d RMSE: %f' % ((i + 1), rmse))
+        avg_results.append(rmse)
+    avg_results = sum(avg_results) / len(avg_results)
+    print("RMSE Average: {}".format(avg_results))
+    return avg_results
 
 
 # plot the forecasts in the context of the original dataset
@@ -109,13 +114,13 @@ def evaluate_forecasts(test, forecasts, n_lag, n_seq):
 def plot_forecasts(series, forecasts, n_test):
     # plot the entire dataset in blue
     pyplot.plot(series.values)
-    # plot the forecasts in red
+    # plot the forecasts in orange
     for i in range(len(forecasts)):
         off_s = len(series) - n_test + i - 1
         off_e = off_s + len(forecasts[i]) + 1
         xaxis = [x for x in range(off_s, off_e)]
         yaxis = [series.values[off_s]] + forecasts[i]
-        pyplot.plot(xaxis, yaxis, color='red')
+        pyplot.plot(xaxis, yaxis, color='orange')
     # show the plot
     pyplot.show()
 

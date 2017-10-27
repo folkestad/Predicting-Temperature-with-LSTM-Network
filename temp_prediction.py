@@ -25,9 +25,9 @@ cuttoff_dataset = 249
 # on t=2: 1 100 1 1 gives 0.058, 1 200 2 1 gives 0.053, 1 200 10 1 gives,
 # 0.023, 1 200 20 1 gives 0.024, 1 200 40 1 gives 0.084, 1 50 40 1 gives
 # 0.036, 1 15 40 1 gives 0.026,
-n_rounds = 5  # 1
-epochs = 5  # 10
-neurons = 1  # 10
+n_rounds = 1  # 1
+epochs = 200  # 10
+neurons = 2  # 10
 hidden_layers = 1  # 10
 batch_size = 1
 rmses = []
@@ -118,7 +118,7 @@ for n in range(n_rounds):
     maes.append(mae)
 
     # print if True
-    if False:
+    if True:
 
         pyplot.plot(expectations_untransformed[:])
         pyplot.plot(predictions_untransformed[:])
