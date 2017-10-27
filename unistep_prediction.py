@@ -26,8 +26,8 @@ cuttoff_dataset = 249
 # 0.023, 1 200 20 1 gives 0.024, 1 200 40 1 gives 0.084, 1 50 40 1 gives
 # 0.036, 1 15 40 1 gives 0.026,
 n_rounds = 1  # 1
-epochs = 200  # 10
-neurons = 2  # 10
+epochs = 5  # 10
+neurons = 16  # 10
 hidden_layers = 1  # 10
 batch_size = 1
 rmses = []
@@ -118,14 +118,14 @@ for n in range(n_rounds):
     maes.append(mae)
 
     # print if True
-    if True:
+    if n_rounds == 1:
 
-        pyplot.plot(expectations_untransformed[:])
-        pyplot.plot(predictions_untransformed[:])
+        pyplot.plot(expectations_untransformed[-20:])
+        pyplot.plot(predictions_untransformed[-20:])
         pyplot.show()
 
-        pyplot.plot(expectations[:])
-        pyplot.plot(predictions[:])
+        pyplot.plot(expectations[-20:])
+        pyplot.plot(predictions[-20:])
         pyplot.show()
 
 # print average results

@@ -16,10 +16,10 @@ scaler, series, train, test = get_data(
     n_test=n_test
 )
 
-runs = 5
+runs = 1
 batch_size = 1
 epochs = 5
-neurons = 1
+neurons = 16
 
 results = []
 for i in range(runs):
@@ -36,9 +36,10 @@ for i in range(runs):
     result = evaluate_forecasts(actual, forecasts, n_lag, n_seq)
     # plot forecasts
     if runs == 1:
-        plot_forecasts(series, forecasts, n_test + 7)
+        plot_forecasts(series[-20:], forecasts, n_test + 7)
 
     results.append(result)
+    print("Run {}/{} finished.".format(i + 1, runs))
 
-print("run {}/{} epochs {} neurons {}".format(i + 1, runs, epochs, neurons))
+print("runs {} epochs {} neurons {}".format(runs, epochs, neurons))
 print("RMSE RUNS AVERAGE: {}".format(sum(results) / len(results)))
