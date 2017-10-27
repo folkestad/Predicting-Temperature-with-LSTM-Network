@@ -19,15 +19,15 @@ from lstm_model import *
 ##########################################################################
 
 # Set how many <time unit>s we want to predict
-test_size = 8
+test_size = 1
 cuttoff_dataset = 249
 
 # on t=2: 1 100 1 1 gives 0.058, 1 200 2 1 gives 0.053, 1 200 10 1 gives,
 # 0.023, 1 200 20 1 gives 0.024, 1 200 40 1 gives 0.084, 1 50 40 1 gives
 # 0.036, 1 15 40 1 gives 0.026,
 n_rounds = 1  # 1
-epochs = 50  # 10
-neurons = 50  # 10
+epochs = 10  # 10
+neurons = 10  # 10
 hidden_layers = 2  # 10
 batch_size = 1
 rmses = []
@@ -35,7 +35,7 @@ maes = []
 
 # get data sets from data handler
 scaler, real_values, train_scaled, test_scaled = get_data(
-    file_name='Data/monthly_mean_global_surface_tempreratures_1880-2017_new.csv',
+    file_name='Data/monthly_mean_global_surface_tempreratures_1880-2017.csv',
     predict_n=test_size,
     cuttoff_dataset=cuttoff_dataset
 )

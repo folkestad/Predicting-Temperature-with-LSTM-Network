@@ -96,7 +96,7 @@ def invert_scale(scaler=None, X=None, value=None):
 # get data from file
 
 
-def get_data(file_name='Data/annual-water-use-in-new-york-cit.csv', predict_n=12, cuttoff_dataset=0):
+def get_data(file_name='Data/monthly_mean_global_surface_tempreratures_1880-2017.csv', predict_n=12, cuttoff_dataset=0):
     # load dataset
     series = read_csv(
         filepath_or_buffer=file_name,
