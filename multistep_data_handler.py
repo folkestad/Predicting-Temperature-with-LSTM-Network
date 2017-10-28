@@ -27,7 +27,6 @@ def date_parser(x):
 
 
 def series_to_supervised(data, n_in=1, n_out=1, dropnan=True):
-    print(data.shape)
     n_vars = 1
     df = DataFrame(data)
     cols, names = list(), list()
@@ -54,7 +53,7 @@ def series_to_supervised(data, n_in=1, n_out=1, dropnan=True):
 
 
 def prepare_data(series, n_test, n_lag, n_seq):
-        # extract raw values
+    # extract raw values
     raw_values = series.values
     # transform data to be stationary
     diff_series = difference(raw_values, 1)
@@ -66,7 +65,10 @@ def prepare_data(series, n_test, n_lag, n_seq):
     scaled_values = scaled_values.reshape(len(scaled_values), 1)
     # transform into supervised learning problem X, y
     supervised = series_to_supervised(scaled_values, n_lag, n_seq)
+    print(supervised.head())
+
     supervised_values = supervised.values
+
     # split into train and test sets
     train, test = supervised_values[0:-n_test], supervised_values[-n_test:]
     return scaler, train, test
@@ -103,9 +105,13 @@ def evaluate_forecasts(test, forecasts, n_lag, n_seq):
         rmse = sqrt(mean_squared_error(actual, predicted))
         print('t+%d RMSE: %f' % ((i + 1), rmse))
         avg_results.append(rmse)
+    actual_last = [row[-1] for row in test]
+    predicted_last = [forecast[-1] for forecast in forecasts]
+    avg_last_result = sqrt(mean_squared_error(actual_last, predicted_last))
     avg_results = sum(avg_results) / len(avg_results)
     print("RMSE Average: {}".format(avg_results))
-    return avg_results
+    print("RMSE Last: {}".format(avg_last_result))
+    return avg_results, avg_last_result
 
 
 # plot the forecasts in the context of the original dataset

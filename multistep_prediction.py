@@ -16,12 +16,13 @@ scaler, series, train, test = get_data(
     n_test=n_test
 )
 
-runs = 1
+runs = 5
 batch_size = 1
-epochs = 5
-neurons = 16
+epochs = 1
+neurons = 1
 
 results = []
+results_last = []
 for i in range(runs):
 
     model = fit_lstm(train, n_lag, n_seq, batch_size, epochs, neurons)
@@ -33,13 +34,16 @@ for i in range(runs):
     actual = inverse_transform(series, actual, scaler, n_test + 7)
 
     # evaluate forecasts
-    result = evaluate_forecasts(actual, forecasts, n_lag, n_seq)
+    result, result_last = evaluate_forecasts(actual, forecasts, n_lag, n_seq)
     # plot forecasts
     if runs == 1:
         plot_forecasts(series[-20:], forecasts, n_test + 7)
 
     results.append(result)
+    results_last.append(result_last)
     print("Run {}/{} finished.".format(i + 1, runs))
 
 print("runs {} epochs {} neurons {}".format(runs, epochs, neurons))
 print("RMSE RUNS AVERAGE: {}".format(sum(results) / len(results)))
+print("RMSE RUNS LAST AVERAGE: {}".format(
+    sum(results_last) / len(results_last)))
